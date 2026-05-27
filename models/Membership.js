@@ -20,6 +20,7 @@ const membershipSchema = new mongoose.Schema(
     pincode: { type: String },
     nominee: { type: String },
     relationship: { type: String },
+    profileImage: { type: String },
     declaration: { type: Boolean, required: true }
   },
   {

@@ -51,6 +51,8 @@ exports.applyMembership = async (req, res) => {
 
     const referenceId = `AAFWS-${Math.floor(100000 + Math.random() * 900000)}`;
 
+    const profileImage = req.file ? '/uploads/profile-images/' + req.file.filename : '';
+
     await Membership.create({
       fullName,
       dob,
@@ -70,7 +72,8 @@ exports.applyMembership = async (req, res) => {
       pincode,
       nominee,
       relationship,
-      declaration
+      profileImage,
+      declaration: declaration === 'true' || declaration === true
     });
 
     return res.status(201).json({

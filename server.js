@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const connectDB = require('./config/db');
 const membershipRoutes = require('./routes/membershipRoutes');
 const membersRoutes = require('./routes/membersRoutes');
@@ -12,6 +13,7 @@ const app = express();
 const frontendOrigin = process.env.FRONTEND_URL || '*';
 app.use(cors({ origin: frontendOrigin === '*' ? true : frontendOrigin }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/membership', membershipRoutes);
 app.use('/api/members', membersRoutes);
