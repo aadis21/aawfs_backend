@@ -3,15 +3,18 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const membershipRoutes = require('./routes/membershipRoutes');
+const membersRoutes = require('./routes/membersRoutes');
 
 dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
+const frontendOrigin = process.env.FRONTEND_URL || '*';
+app.use(cors({ origin: frontendOrigin === '*' ? true : frontendOrigin }));
 app.use(express.json());
 
 app.use('/api/membership', membershipRoutes);
+app.use('/api/members', membersRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ success: true, message: 'AAFWS backend is running' });

@@ -86,3 +86,30 @@ exports.applyMembership = async (req, res) => {
     });
   }
 };
+
+exports.getMembers = async (req, res) => {
+  try {
+    const members = await Membership.find({}, {
+      __v: 0,
+      email: 0,
+      phone: 0,
+      address: 0,
+      nominee: 0,
+      relationship: 0,
+      declaration: 0
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      members
+    });
+  } catch (error) {
+    console.error('Fetching members error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to fetch members at this time'
+    });
+  }
+};
