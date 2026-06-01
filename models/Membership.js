@@ -21,7 +21,11 @@ const membershipSchema = new mongoose.Schema(
     nominee: { type: String },
     relationship: { type: String },
     profileImage: { type: String },
-    declaration: { type: Boolean, required: true }
+    declaration: { type: Boolean, required: true },
+    membershipId: { type: String, unique: true, sparse: true },
+    isActive: { type: Boolean, default: true },
+    bloodGroup: { type: String, default: '' },
+    emergencyContact: { type: String, default: '' }
   },
   {
     timestamps: true

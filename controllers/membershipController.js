@@ -1,4 +1,6 @@
 const Membership = require('../models/Membership');
+const Counter = require('../models/Counter');
+const Notification = require('../models/Notification');
 
 exports.applyMembership = async (req, res) => {
   try {
@@ -21,7 +23,9 @@ exports.applyMembership = async (req, res) => {
       pincode,
       nominee,
       relationship,
-      declaration
+      declaration,
+      bloodGroup,
+      emergencyContact
     } = req.body;
 
     const requiredFields = [
@@ -49,11 +53,19 @@ exports.applyMembership = async (req, res) => {
       });
     }
 
-    const referenceId = `AAFWS-${Math.floor(100000 + Math.random() * 900000)}`;
+    // Atomically generate sequential Membership ID: AAFWS-YYYY-XXXX
+    const currentYear = new Date().getFullYear();
+    const counter = await Counter.findOneAndUpdate(
+      { year: currentYear },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const seqNum = String(counter.seq).padStart(4, '0');
+    const membershipId = `AAFWS-${currentYear}-${seqNum}`;
 
     const profileImage = req.file ? '/uploads/profile-images/' + req.file.filename : '';
 
-    await Membership.create({
+    const newMember = await Membership.create({
       fullName,
       dob,
       gender,
@@ -73,13 +85,28 @@ exports.applyMembership = async (req, res) => {
       nominee,
       relationship,
       profileImage,
-      declaration: declaration === 'true' || declaration === true
+      declaration: declaration === 'true' || declaration === true,
+      membershipId,
+      bloodGroup: bloodGroup || '',
+      emergencyContact: emergencyContact || '',
+      isActive: true
     });
+
+    // Create Admin Notification
+    try {
+      await Notification.create({
+        type: 'new_member',
+        referenceId: newMember.membershipId,
+        message: `New member registration: ${newMember.fullName} (${newMember.membershipId})`
+      });
+    } catch (notifErr) {
+      console.error('Failed to create admin notification:', notifErr);
+    }
 
     return res.status(201).json({
       success: true,
       message: 'Application submitted successfully',
-      referenceId
+      referenceId: membershipId
     });
   } catch (error) {
     console.error('Membership submission error:', error);
@@ -92,7 +119,8 @@ exports.applyMembership = async (req, res) => {
 
 exports.getMembers = async (req, res) => {
   try {
-    const members = await Membership.find({}, {
+    // Only return active members for the public page directory
+    const members = await Membership.find({ isActive: { $ne: false } }, {
       __v: 0,
       email: 0,
       phone: 0,
